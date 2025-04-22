@@ -1,12 +1,42 @@
-import {createFileRoute} from '@tanstack/react-router'
+import {createFileRoute, Link} from '@tanstack/react-router'
 import {useQuery} from "@tanstack/react-query";
 import {client} from "../hono.ts";
-import {Button} from "@/components/ui/button";
-import {LoaderCircle} from "lucide-react";
+import {LoaderCircle, SquareArrowOutUpRight, TrashIcon} from "lucide-react";
+import {ColumnDef} from "@tanstack/react-table";
+import {InferResponseType} from "hono";
+import {DataTable} from "@/components/data-table.tsx";
+import {Button} from "@/components/ui/button.tsx";
 
 export const Route = createFileRoute('/')({
   component: RouteComponent,
 })
+
+type Warehouse = InferResponseType<typeof client.api.warehouses.$get, 200>[0]
+
+const columns: ColumnDef<Warehouse>[] = [
+  {accessorKey: "name", header: "Name"},
+  {accessorKey: "capacity", header: "Capacity"},
+  {accessorKey: "items", header: "Current Items"},
+  {accessorKey: "max_weight", header: "Maximum Weight"},
+  {header: "Total Weight", accessorFn: (row) => row.weight.toFixed(3)},
+  {header: "Average Weirdness", accessorFn: (row) => row.average_weirdness.toFixed(3)},
+  {
+    id: "action", cell: (cell) => {
+      const id = cell.row.original.id;
+
+      return <div className="flex space-x-2 justify-end">
+        <Button asChild size="icon" variant="outline">
+          <Link to="/$wId" params={{wId: id}}>
+            <SquareArrowOutUpRight/>
+          </Link>
+        </Button>
+        <Button size="icon" variant="destructive">
+          <TrashIcon/>
+        </Button>
+      </div>
+    }
+  }
+]
 
 function RouteComponent() {
   const {data, isSuccess} = useQuery({
@@ -22,14 +52,9 @@ function RouteComponent() {
   }
 
   return (
-    <div>
-      <Button>Hello</Button>
-      {data?.map(warehouse => (
-        <div key={warehouse.name}>
-          <p>{warehouse.name}</p>
-          <p>{warehouse.capacity}</p>
-        </div>
-      ))}
+    <div className="max-w-[96rem] w-[90%] mx-auto mt-4">
+      <h1 className="text-2xl font-bold my-2">All Warehouses</h1>
+      <DataTable columns={columns} data={data}/>
     </div>
   )
 }
