@@ -14,6 +14,7 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as AboutImport } from './routes/about'
 import { Route as IndexImport } from './routes/index'
 import { Route as WIdIndexImport } from './routes/$wId/index'
+import { Route as WIdIIdIndexImport } from './routes/$wId/$iId/index'
 
 // Create/Update Routes
 
@@ -32,6 +33,12 @@ const IndexRoute = IndexImport.update({
 const WIdIndexRoute = WIdIndexImport.update({
   id: '/$wId/',
   path: '/$wId/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const WIdIIdIndexRoute = WIdIIdIndexImport.update({
+  id: '/$wId/$iId/',
+  path: '/$wId/$iId/',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -60,6 +67,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WIdIndexImport
       parentRoute: typeof rootRoute
     }
+    '/$wId/$iId/': {
+      id: '/$wId/$iId/'
+      path: '/$wId/$iId'
+      fullPath: '/$wId/$iId'
+      preLoaderRoute: typeof WIdIIdIndexImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -69,12 +83,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/$wId': typeof WIdIndexRoute
+  '/$wId/$iId': typeof WIdIIdIndexRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/$wId': typeof WIdIndexRoute
+  '/$wId/$iId': typeof WIdIIdIndexRoute
 }
 
 export interface FileRoutesById {
@@ -82,14 +98,15 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/$wId/': typeof WIdIndexRoute
+  '/$wId/$iId/': typeof WIdIIdIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/$wId'
+  fullPaths: '/' | '/about' | '/$wId' | '/$wId/$iId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/$wId'
-  id: '__root__' | '/' | '/about' | '/$wId/'
+  to: '/' | '/about' | '/$wId' | '/$wId/$iId'
+  id: '__root__' | '/' | '/about' | '/$wId/' | '/$wId/$iId/'
   fileRoutesById: FileRoutesById
 }
 
@@ -97,12 +114,14 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   WIdIndexRoute: typeof WIdIndexRoute
+  WIdIIdIndexRoute: typeof WIdIIdIndexRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   WIdIndexRoute: WIdIndexRoute,
+  WIdIIdIndexRoute: WIdIIdIndexRoute,
 }
 
 export const routeTree = rootRoute
@@ -117,7 +136,8 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/about",
-        "/$wId/"
+        "/$wId/",
+        "/$wId/$iId/"
       ]
     },
     "/": {
@@ -128,6 +148,9 @@ export const routeTree = rootRoute
     },
     "/$wId/": {
       "filePath": "$wId/index.tsx"
+    },
+    "/$wId/$iId/": {
+      "filePath": "$wId/$iId/index.tsx"
     }
   }
 }
