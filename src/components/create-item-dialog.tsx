@@ -59,13 +59,17 @@ export const CreateItemDialog: React.FC<CreateItemDialogProps> = ({wId}) => {
           id: wId
         }
       });
-      return await res.json()
+      if (res.status === 400) {
+        const error = await res.json();
+        throw new Error(error.message);
+      }
+      return await res.json();
     }, onSuccess: () => {
       setOpen(false);
       toast("Dodano item :D");
       void queryClient.invalidateQueries({queryKey: [wId]})
-    }, onError: () => {
-      toast("Coś poszło nie tak :(");
+    }, onError: (err) => {
+      toast(err.message);
     }
   })
 
