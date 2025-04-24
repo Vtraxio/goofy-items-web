@@ -1,11 +1,13 @@
 import {createFileRoute, Link} from '@tanstack/react-router'
-import {useQuery} from "@tanstack/react-query";
+import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {client} from "../hono.ts";
 import {LoaderCircle, SquareArrowOutUpRight, TrashIcon} from "lucide-react";
 import {ColumnDef} from "@tanstack/react-table";
 import {InferResponseType} from "hono";
 import {DataTable} from "@/components/data-table.tsx";
 import {Button} from "@/components/ui/button.tsx";
+import {CreateWarehouseDialog} from "@/components/create-warehouse-dialog.tsx";
+import {toast} from "sonner";
 
 export const Route = createFileRoute('/')({
   component: RouteComponent,
@@ -21,22 +23,45 @@ const columns: ColumnDef<Warehouse>[] = [
   {header: "Total Weight", accessorFn: (row) => row.weight.toFixed(3)},
   {header: "Average Weirdness", accessorFn: (row) => row.average_weirdness.toFixed(3)},
   {
-    id: "action", cell: (cell) => {
-      const id = cell.row.original.id;
-
-      return <div className="flex space-x-2 justify-end">
-        <Button asChild size="icon" variant="outline">
-          <Link to="/$wId" params={{wId: id}}>
-            <SquareArrowOutUpRight/>
-          </Link>
-        </Button>
-        <Button size="icon" variant="destructive">
-          <TrashIcon/>
-        </Button>
-      </div>
-    }
+    id: "action", cell: (cell) => <ActionCell warehouse={cell.row.original}/>
   }
 ]
+
+interface ActionCellProps {
+  warehouse: Warehouse;
+}
+
+const ActionCell: React.FC<ActionCellProps> = ({warehouse}) => {
+  const queryClient = useQueryClient();
+
+  const deleteWarehouseRotation = useMutation({
+    mutationFn: async () => {
+      const res = await client.api.warehouses[":id"].$delete({
+        param: {
+          id: warehouse.id
+        }
+      });
+      return await res.json()
+    }, onSuccess: () => {
+      toast("Usunięto magazyn :D");
+      void queryClient.invalidateQueries({queryKey: ["warehouses"]})
+    }, onError: () => {
+      toast("Coś jebło :O");
+    }
+  })
+
+  return <div className="flex space-x-2 justify-end">
+    <Button asChild size="icon" variant="outline">
+      <Link to="/$wId" params={{wId: warehouse.id}}>
+        <SquareArrowOutUpRight/>
+      </Link>
+    </Button>
+    <Button size="icon" variant="destructive" onClick={() => deleteWarehouseRotation.mutate()}
+            disabled={deleteWarehouseRotation.isPending}>
+      <TrashIcon/>
+    </Button>
+  </div>
+}
 
 function RouteComponent() {
   const {data, isSuccess} = useQuery({
@@ -53,7 +78,10 @@ function RouteComponent() {
 
   return (
     <div className="max-w-[96rem] w-[90%] mx-auto mt-4">
-      <h1 className="text-2xl font-bold my-2">All Warehouses</h1>
+      <div className="flex items-center space-x-2">
+        <h1 className="text-2xl font-bold my-2">All Warehouses</h1>
+        <CreateWarehouseDialog/>
+      </div>
       <DataTable columns={columns} data={data}/>
     </div>
   )
